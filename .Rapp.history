@@ -1,7 +1,0 @@
-setwd("~/Documents/R_packages/phytometer")
-devtools::document()
-devtools::install()
-devtools::check(vignettes = FALSE)
-pkgbuild::clean_dll()
-devtools::document()
-devtools::install(force = TRUE)
