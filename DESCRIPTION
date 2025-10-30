@@ -1,0 +1,19 @@
+Package: phytoakmeteR
+Title: Analysis Tools for Oak Holobiont Acclimation and Adaptation Research
+Version: 0.0.0.9000
+Authors@R: person("Felix", "Zimmermann", email = "felix.zimmermann@wsl.ch", 
+    role = c("aut", "cre"))
+Description: Provides analytical tools for investigating acclimation and 
+    adaptation mechanisms in forest tree holobionts, with focus on Quercus 
+    robur. Functions support analysis of multi-omics data (genomics, 
+    epigenomics, transcriptomics, metabolomics) integrated with physiological, 
+    morphological, and environmental measurements from controlled experiments 
+    and field monitoring. Includes tools for processing microclimatic data, 
+    analyzing stress gradients (drought, herbivory), and linking environmental 
+    variation to holobiont responses across spatial scales. Designed for the 
+    PhytOakmeter research unit studying tree responses across environmental 
+    gradients from ecotron to pan-European scales.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
