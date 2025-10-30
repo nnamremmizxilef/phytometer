@@ -1,4 +1,4 @@
-Package: phytoakmeteR
+Package: photometer
 Title: Analysis Tools for Oak Holobiont Acclimation and Adaptation Research
 Version: 0.0.0.9000
 Authors@R: person("Felix", "Zimmermann", email = "felix.zimmermann@wsl.ch", 
@@ -17,3 +17,5 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
+URL: https://github.com/nnamremmizxilef/photometer
+BugReports: https://github.com/nnamremmizxilef/photometer/issues
