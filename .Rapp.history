@@ -1,5 +1,448 @@
 setwd("~/Documents/R_packages/phytometer/")
-usethis::use_rstudio()
-usethis::use_news_md()
-usethis::use_github_action("check-standard")
-usethis::use_test("showtidydata")
+usethis::use_r("showtidydata")
+devtools::document()
+devtools::check()
+unlink("vignettes", recursive = TRUE)#
+devtools::check()
+usethis::use_r("savetidydata")
+#' Save data in tidy long format#
+#'#
+#' Converts a dataframe to tidy long format and saves it to a file. Optionally#
+#' includes metadata columns (ID, timestamp, grouping variables) and allows#
+#' filtering of variable types.#
+#'#
+#' @param dataframe A data frame to convert and save#
+#' @param filename Output filename (default: "tidy_data.csv")#
+#' @param format Output format: "csv", "tsv", "rds", "xlsx" (default: "csv")#
+#' @param id_col Name for the ID column in long format (default: "id")#
+#' @param keep_cols Character vector of column names to keep as identifiers #
+#'   (e.g., site_id, tree_id). These won't be pivoted. (default: NULL)#
+#' @param var_types Types of variables to include: "numeric", "character", #
+#'   "factor", or "all" (default: "numeric")#
+#' @param add_timestamp Logical, add a timestamp column (default: FALSE)#
+#' @param na_rm Logical, remove rows with NA values (default: FALSE)#
+#' @return Invisibly returns the tidy dataframe and prints save confirmation#
+#' @export#
+#' @examples#
+#' \dontrun{#
+#' data(envirodata)#
+#' savetidydata(envirodata, "environment_long.csv", keep_cols = "site_id")#
+#' savetidydata(phenotydata, "phenotype_long.xlsx", format = "xlsx", #
+#'              keep_cols = c("tree_id", "site_id"))#
+#' }#
+savetidydata <- function(dataframe, #
+                         filename = "tidy_data.csv",#
+                         format = c("csv", "tsv", "rds", "xlsx"),#
+                         id_col = "id",#
+                         keep_cols = NULL,#
+                         var_types = c("numeric", "character", "factor", "all"),#
+                         add_timestamp = FALSE,#
+                         na_rm = FALSE) {#
+  # Match arguments#
+  format <- match.arg(format)#
+  var_types <- match.arg(var_types)#
+  # Avoid NSE notes#
+  variable <- value <- NULL#
+  # Select columns based on var_types#
+  if (var_types == "numeric") {#
+    data_cols <- dataframe |> dplyr::select(dplyr::where(is.numeric))#
+  } else if (var_types == "character") {#
+    data_cols <- dataframe |> dplyr::select(dplyr::where(is.character))#
+  } else if (var_types == "factor") {#
+    data_cols <- dataframe |> dplyr::select(dplyr::where(is.factor))#
+  } else {#
+    data_cols <- dataframe#
+  }#
+  # Separate keep_cols from data to pivot#
+  if (!is.null(keep_cols)) {#
+    if (!all(keep_cols %in% names(dataframe))) {#
+      stop("Some keep_cols not found in dataframe: ", #
+           paste(setdiff(keep_cols, names(dataframe)), collapse = ", "))#
+    }#
+    id_data <- dataframe[, keep_cols, drop = FALSE]#
+    data_cols <- data_cols |> #
+      dplyr::select(-dplyr::any_of(keep_cols))#
+  } else {#
+    id_data <- NULL#
+  }#
+  if (ncol(data_cols) == 0) {#
+    stop("No columns to pivot after applying filters")#
+  }#
+  # Add row ID#
+  data_cols <- data_cols |> #
+    dplyr::mutate(!!id_col := dplyr::row_number())#
+  # Convert to long format#
+  tidy_data <- data_cols |>#
+    tidyr::pivot_longer(cols = -dplyr::all_of(id_col),#
+                        names_to = "variable",#
+                        values_to = "value")#
+  # Add back identifier columns#
+  if (!is.null(id_data)) {#
+    id_data <- id_data |> #
+      dplyr::mutate(!!id_col := dplyr::row_number())#
+    tidy_data <- tidy_data |>#
+      dplyr::left_join(id_data, by = id_col)#
+  }#
+  # Add timestamp if requested#
+  if (add_timestamp) {#
+    tidy_data <- tidy_data |>#
+      dplyr::mutate(timestamp = Sys.time())#
+  }#
+  # Remove NAs if requested#
+  if (na_rm) {#
+    n_before <- nrow(tidy_data)#
+    tidy_data <- tidy_data |> tidyr::drop_na(value)#
+    n_removed <- n_before - nrow(tidy_data)#
+    message(sprintf("Removed %d rows with NA values", n_removed))#
+  }#
+  # Save based on format#
+  if (format == "csv") {#
+    readr::write_csv(tidy_data, filename)#
+  } else if (format == "tsv") {#
+    readr::write_tsv(tidy_data, filename)#
+  } else if (format == "rds") {#
+    saveRDS(tidy_data, filename)#
+  } else if (format == "xlsx") {#
+    if (!requireNamespace("writexl", quietly = TRUE)) {#
+      stop("Package 'writexl' needed for xlsx format. Install with: install.packages('writexl')")#
+    }#
+    writexl::write_xlsx(tidy_data, filename)#
+  }#
+  message(sprintf("Tidy data saved to: %s", filename))#
+  message(sprintf("Dimensions: %d rows × %d columns", nrow(tidy_data), ncol(tidy_data)))#
+  return(invisible(tidy_data))#
+}
+usethis::use_package("readr")#
+usethis::use_package("writexl", type = "Suggests")
+devtools::document()#
+devtools::load_all()
+rm(list = c("savetidydata"))
+devtools::load_all()
+devtools:check()
+devtools::check()
+usethis::use_r("createtidydata")
+#' Create tidy long format data#
+#'#
+#' Converts a dataframe to tidy long format without saving. Returns the #
+#' transformed dataframe for further analysis or manipulation.#
+#'#
+#' @param dataframe A data frame to convert#
+#' @param id_col Name for the ID column in long format (default: "id")#
+#' @param keep_cols Character vector of column names to keep as identifiers #
+#'   (e.g., site_id, tree_id). These won't be pivoted. (default: NULL)#
+#' @param var_types Types of variables to include: "numeric", "character", #
+#'   "factor", or "all" (default: "numeric")#
+#' @param var_name Name for the variable column (default: "variable")#
+#' @param value_name Name for the value column (default: "value")#
+#' @param add_timestamp Logical, add a timestamp column (default: FALSE)#
+#' @param na_rm Logical, remove rows with NA values (default: FALSE)#
+#' @param arrange_by Character vector of column names to arrange by (default: NULL)#
+#' @return A tidy dataframe in long format#
+#' @export#
+#' @examples#
+#' \dontrun{#
+#' data(envirodata)#
+#' tidy_env <- createtidydata(envirodata, keep_cols = "site_id")#
+#' #
+#' data(phenotydata)#
+#' tidy_pheno <- createtidydata(phenotydata, #
+#'                              keep_cols = c("tree_id", "site_id"),#
+#'                              var_name = "trait",#
+#'                              value_name = "measurement",#
+#'                              arrange_by = c("tree_id", "trait"))#
+#' }#
+createtidydata <- function(dataframe, #
+                           id_col = "id",#
+                           keep_cols = NULL,#
+                           var_types = c("numeric", "character", "factor", "all"),#
+                           var_name = "variable",#
+                           value_name = "value",#
+                           add_timestamp = FALSE,#
+                           na_rm = FALSE,#
+                           arrange_by = NULL) {#
+  # Match arguments#
+  var_types <- match.arg(var_types)#
+  # Select columns based on var_types#
+  if (var_types == "numeric") {#
+    data_cols <- dataframe |> dplyr::select(dplyr::where(is.numeric))#
+  } else if (var_types == "character") {#
+    data_cols <- dataframe |> dplyr::select(dplyr::where(is.character))#
+  } else if (var_types == "factor") {#
+    data_cols <- dataframe |> dplyr::select(dplyr::where(is.factor))#
+  } else {#
+    data_cols <- dataframe#
+  }#
+  # Separate keep_cols from data to pivot#
+  if (!is.null(keep_cols)) {#
+    if (!all(keep_cols %in% names(dataframe))) {#
+      stop("Some keep_cols not found in dataframe: ", #
+           paste(setdiff(keep_cols, names(dataframe)), collapse = ", "))#
+    }#
+    id_data <- dataframe[, keep_cols, drop = FALSE]#
+    data_cols <- data_cols |> #
+      dplyr::select(-dplyr::any_of(keep_cols))#
+  } else {#
+    id_data <- NULL#
+  }#
+  if (ncol(data_cols) == 0) {#
+    stop("No columns to pivot after applying filters")#
+  }#
+  # Add row ID#
+  data_cols <- data_cols |> #
+    dplyr::mutate(!!id_col := dplyr::row_number())#
+  # Convert to long format#
+  tidy_data <- data_cols |>#
+    tidyr::pivot_longer(cols = -dplyr::all_of(id_col),#
+                        names_to = var_name,#
+                        values_to = value_name)#
+  # Add back identifier columns#
+  if (!is.null(id_data)) {#
+    id_data <- id_data |> #
+      dplyr::mutate(!!id_col := dplyr::row_number())#
+    tidy_data <- tidy_data |>#
+      dplyr::left_join(id_data, by = id_col)#
+  }#
+  # Add timestamp if requested#
+  if (add_timestamp) {#
+    tidy_data <- tidy_data |>#
+      dplyr::mutate(timestamp = Sys.time())#
+  }#
+  # Remove NAs if requested#
+  if (na_rm) {#
+    tidy_data <- tidy_data |> #
+      tidyr::drop_na(dplyr::all_of(value_name))#
+  }#
+  # Arrange if requested#
+  if (!is.null(arrange_by)) {#
+    if (!all(arrange_by %in% names(tidy_data))) {#
+      warning("Some arrange_by columns not found in tidy data. Skipping arrangement.")#
+    } else {#
+      tidy_data <- tidy_data |>#
+        dplyr::arrange(dplyr::across(dplyr::all_of(arrange_by)))#
+    }#
+  }#
+  return(tidy_data)#
+}
+devtools::document()
+devtools::load_all()
+rm(list = c("createtidydata"))
+devtools::load("all")
+devtools::load_all()
+devtools::check()
+tools::showNonASCIIfile("R/savetidydata.R")
+usethis::use_r("savetidydata")
+devtools::document()
+devtools::check()
+> devtools::check()#
+══ Documenting ════════════════════════════════════════════════════════════════#
+ℹ Updating phytometer documentation#
+ℹ Loading phytometer#
+#
+══ Building ═══════════════════════════════════════════════════════════════════#
+Setting env vars:#
+• CFLAGS    : -Wall -pedantic#
+• CXXFLAGS  : -Wall -pedantic#
+• CXX11FLAGS: -Wall -pedantic#
+• CXX14FLAGS: -Wall -pedantic#
+• CXX17FLAGS: -Wall -pedantic#
+• CXX20FLAGS: -Wall -pedantic#
+── R CMD build ────────────────────────────────────────────────────────────────#
+─  preparing ‘phytometer’:#
+─  package encoding: UTF-8ta-information ... preparing ‘phytometer’:#
+✔  checking package namespace information ...#
+✔  checking for hidden files and directories#
+✔  checking for portable file names#
+✔  checking for sufficient/correct file permissions ...ectories#
+✔  checking whether package ‘phytometer’ can be installed (769ms)#
+✔  checking package directory ...e ...9ms)#
+N  checking for future file timestamps (1m 0.4s)#
+   unable to verify current time#
+✔  checking DESCRIPTION meta-information ... 0.4s)#
+✔  checking top-level files#
+✔  checking for left-over files#
+✔  checking index information#
+✔  checking package subdirectories ...#
+✔  checking code files for non-ASCII characters ...#
+✔  checking R files for syntax errors ...#
+✔  checking whether the package can be loaded ...#
+✔  checking whether the package can be loaded with stated dependencies ...#
+✔  checking whether the package can be unloaded cleanly ...#
+✔  checking whether the namespace can be loaded with stated dependencies ...#
+✔  checking dependencies in R code (494ms)nloaded cleanly ...#
+✔  checking S3 generic/method consistency ...#
+✔  checking replacement functions ...#
+✔  checking foreign function calls ...#
+✔  checking Rd files ...ossible problems ...#
+✔  checking Rd metadata ...#
+✔  checking Rd line widths ...#
+✔  checking Rd cross-references ...#
+✔  checking for missing documentation entries ...#
+✔  checking Rd \usage sections ... mismatches ...#
+✔  checking Rd contents ...#
+✔  checking data for non-ASCII characters ...ples ...#
+✔  checking LazyData#
+✔  checking for unstated dependencies in ‘tests’ ....#
+── R CMD check results ───────────────────────────── phytometer 0.0.0.9000 ────#
+Duration: 1m 7.1s#
+#
+❯ checking for code/documentation mismatches ... WARNING#
+  Data codoc mismatches from Rd file 'genotydata.Rd':#
+  Variables in data frame 'genotydata'#
+    Code: epigenetic_mark_1 epigenetic_mark_2 gene_expression_drought#
+          gene_expression_herbivory microbiome_diversity site_id snp_001#
+          snp_002 snp_003 snp_004 snp_005 tree_id#
+    Docs: epigenetic_mark_1 epigenetic_mark_2 gene_expression_drought#
+          gene_expression_herbivory microbiome_diversity site_id snp_001#
+          to snp_005 tree_id#
+#
+❯ checking for future file timestamps ... NOTE#
+  unable to verify current time#
+#
+❯ checking R code for possible problems ... NOTE#
+  createtidydata: no visible global function definition for ‘:=’#
+  savetidydata: no visible global function definition for ‘:=’#
+  showtidydata: no visible global function definition for#
+    ‘complete.cases’#
+  Undefined global functions or variables:#
+    := complete.cases#
+  Consider adding#
+    importFrom("stats", "complete.cases")#
+  to your NAMESPACE file.#
+#
+0 errors ✔ | 1 warning ✖ | 2 notes ✖#
+───────────────────────────── phytometer 0.0.0.9000 ────#
+> > devtools::check()#
+══ Documenting ════════════════════════════════════════════════════════════════#
+ℹ Updating phytometer documentation#
+ℹ Loading phytometer#
+#
+══ Building ═══════════════════════════════════════════════════════════════════#
+Setting env vars:#
+• CFLAGS    : -Wall -pedantic#
+• CXXFLAGS  : -Wall -pedantic#
+• CXX11FLAGS: -Wall -pedantic#
+• CXX14FLAGS: -Wall -pedantic#
+• CXX17FLAGS: -Wall -pedantic#
+• CXX20FLAGS: -Wall -pedantic#
+── R CMD build ────────────────────────────────────────────────────────────────#
+─  preparing ‘phytometer’:#
+─  package encoding: UTF-8ta-information ... preparing ‘phytometer’:#
+✔  checking package namespace information ...#
+✔  checking for hidden files and directories#
+✔  checking for portable file names#
+✔  checking for sufficient/correct file permissions ...ectories#
+✔  checking whether package ‘phytometer’ can be installed (769ms)#
+✔  checking package directory ...e ...9ms)#
+N  checking for future file timestamps (1m 0.4s)#
+   unable to verify current time#
+✔  checking DESCRIPTION meta-information ... 0.4s)#
+✔  checking top-level files#
+✔  checking for left-over files#
+✔  checking index information#
+✔  checking package subdirectories ...#
+✔  checking code files for non-ASCII characters ...#
+✔  checking R files for syntax errors ...#
+✔  checking whether the package can be loaded ...#
+✔  checking whether the package can be loaded with stated dependencies ...#
+✔  checking whether the package can be unloaded cleanly ...#
+✔  checking whether the namespace can be loaded with stated dependencies ...#
+✔  checking dependencies in R code (494ms)nloaded cleanly ...#
+✔  checking S3 generic/method consistency ...#
+✔  checking replacement functions ...#
+✔  checking foreign function calls ...#
+✔  checking Rd files ...ossible problems ...#
+✔  checking Rd metadata ...#
+✔  checking Rd line widths ...#
+✔  checking Rd cross-references ...#
+✔  checking for missing documentation entries ...#
+✔  checking Rd \usage sections ... mismatches ...#
+✔  checking Rd contents ...#
+✔  checking data for non-ASCII characters ...ples ...#
+✔  checking LazyData#
+✔  checking for unstated dependencies in ‘tests’ ....#
+── R CMD check results ───────────────────────────── phytometer 0.0.0.9000 ────#
+Duration: 1m 7.1s#
+#
+❯ checking for code/documentation mismatches ... WARNING#
+  Data codoc mismatches from Rd file 'genotydata.Rd':#
+  Variables in data frame 'genotydata'#
+    Code: epigenetic_mark_1 epigenetic_mark_2 gene_expression_drought#
+          gene_expression_herbivory microbiome_diversity site_id snp_001#
+          snp_002 snp_003 snp_004 snp_005 tree_id#
+    Docs: epigenetic_mark_1 epigenetic_mark_2 gene_expression_drought#
+          gene_expression_herbivory microbiome_diversity site_id snp_001#
+          to snp_005 tree_id#
+#
+❯ checking for future file timestamps ... NOTE#
+  unable to verify current time#
+#
+❯ checking R code for possible problems ... NOTE#
+  createtidydata: no visible global function definition for ‘:=’#
+  savetidydata: no visible global function definition for ‘:=’#
+  showtidydata: no visible global function definition for#
+    ‘complete.cases’#
+  Undefined global functions or variables:#
+    := complete.cases#
+  Consider adding#
+    importFrom("stats", "complete.cases")#
+  to your NAMESPACE file.#
+#
+0 errors ✔ | 1 warning ✖ | 2 notes ✖#
+───────────────────────────── phytometer 0.0.0.9000 ────#
+> usethis::edit_file("R/data.R")
+usethis::edit_file("R/data.R")
+usethis::edit_file("R/showtidydata.R")
+usethis::edit_file("R/createtidydata.R")
+usethis::edit_file("R/savetidydata.R")
+devtools::document()
+devtools::check()
+usethis::use_package("rlang")
+usethis::edit_file("DESCRIPTION")
+devtools::document()
+devtools::check()
+unlink("data", recursive = TRUE)
+usethis::use_r("data_generators")
+usethis::edit_file("R/data.R")
+devtools::document()
+devtools::load_all()
+devtools::check()
+usethis::edit_file("R/data_generators.R")
+devtools::document()
+devtools::check()
+usethis::use_r("analysis_functions")
+devtools::document()
+devtools::load_all()
+usethis::use_r("tidy_functions")
+file.remove("R/showtidydata.R")
+file.remove("R/createtidydata.R")
+file.remove("R/savetidydata.R")
+file.remove("R/fucntion_gdd.R")
+file.remove("R/function_gdd.R")
+devtools::document()#
+devtools::load_all()
+usethis::edit_file("NEWS.md")
+usethis::edit_file("NEWS.md")
+usethis::edit_file("NEWS.md")
+usethis::edit_file("README.md")
+usethis::edit_file("DESCRIPTION")
+usethis::edit_file("DESCRIPTION")
+usethis::edit_file("DESCRIPTION")
+devtools::document()
+warnings()
+usethis::edit_file("DESCRIPTION")
+devtools::document()
+warnings()
+devtools::document()
+usethis::edit_file("DESCRIPTION")
+desc <- readLines("DESCRIPTION")
+writeLines(desc, "DESCRIPTION")
+devtools::document()
+devtools::install()
+devtools::check(vignettes = FALSE)
+usethis::edit_file("R/analysis_functions.R")
+devtools::document()
+devtools::install()
+devtools::check(vignettes = FALSE)
+remove.packages("phytometer")#
+devtools::document()#
+devtools::install()

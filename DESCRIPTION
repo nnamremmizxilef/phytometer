@@ -24,13 +24,12 @@ Imports:
     dplyr,
     ggplot2,
     magrittr,
+    readr,
+    rlang,
     tidyr
 Suggests: 
-    knitr,
-    rmarkdown,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    writexl
 Config/testthat/edition: 3
-VignetteBuilder: knitr
 Depends: 
     R (>= 3.5)
-LazyData: true
