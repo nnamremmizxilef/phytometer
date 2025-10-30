@@ -1,0 +1,17 @@
+setwd(~/Documents/R_packages/phytometer)
+setwd(~/Documents/R_packages/phytometer)
+setwd("~/Documents/R_packages/phytometer")
+devtools::load_all()
+df <- data.frame(#
+  temp = rnorm(100, 20, 5),#
+  precip = rnorm(100, 50, 10),#
+  gdd = rnorm(100, 1500, 200)#
+)
+result <- showtidydata(df, cor_method = "pearson")#
+print(result$distribution_plot)
+result2 <- showtidydata(df, cor_method = "spearman")
+results2
+print(results2)
+result2 <- showtidydata(df, cor_method = "spearman")
+print(results2)
+print(result2)
