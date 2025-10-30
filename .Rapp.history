@@ -1,10 +1,5 @@
-setwd("~/Documents/R_packages/phytometer")
-devtools::check()
-usethis::use_r("showtidydata")
-devtools::document()
-devtools::check()
-usethis::use_readme_rmd()              # Create README#
-usethis::use_testthat()                # Set up testing#
-usethis::use_test("showtidydata")      # Add tests#
-usethis::use_vignette("introduction")  # Tutorial#
-usethis::use_pkgdown()                 # Package website
+setwd("~/Documents/R_packages/phytometer/")
+usethis::use_rstudio()
+usethis::use_news_md()
+usethis::use_github_action("check-standard")
+usethis::use_test("showtidydata")

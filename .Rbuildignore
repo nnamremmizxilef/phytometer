@@ -4,3 +4,6 @@
 ^docs$
 ^pkgdown$
 ^data-raw$
+^phytometer\.Rproj$
+^\.Rproj\.user$
+^\.github$
