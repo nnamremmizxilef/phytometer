@@ -1,4 +1,4 @@
-# phytometer <img src="inst/hex/logo.png" align="right" height="180" /> <br><br>
+# phytometer <img src="inst/hex/logo.png" align="right" height="250" />
 
 ## Overview
 
