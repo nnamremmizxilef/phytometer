@@ -1,15 +1,16 @@
 # phytometeR
 
-<div style="display: flex; align-items: center; gap: 25px;">
+<div style="display: flex; align-items: center;">
 
-  <img src="inst/hex/logo.png" alt="phytometeR logo" height="160">
+  <img src="inst/hex/logo.png" alt="phytometeR logo" height="160" style="margin-right: 25px;">
 
   <p style="margin: 0;">
-    **phytometeR** provides tools for analyzing multi-omics data integrated with environmental measurements in ecological and evolutionary studies.  
+    <strong>phytometeR</strong> provides tools for analyzing multi-omics data integrated with environmental measurements in ecological and evolutionary studies.  
     The package facilitates investigation of organism responses to environmental stressors across spatial and temporal gradients.
   </p>
 
 </div>
+
 
 
 
