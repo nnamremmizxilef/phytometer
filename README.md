@@ -1,7 +1,9 @@
-<div style="text-align: center;">
-  <img src="man/figures/logo.png" alt="phytometeR logo" width="120"><br>
-  <h1>phytometeR</h1>
-</div>
+<table>
+  <tr>
+    <td><h1>phytometeR</h1></td>
+    <td align="right"><img src="man/figures/logo.png" width="140" alt="phytometeR logo"></td>
+  </tr>
+</table>
 
 
 ## Overview
