@@ -1,7 +1,8 @@
-<div style="display: flex; align-items: center; justify-content: space-between;">
+<div style="text-align: center;">
+  <img src="man/figures/logo.png" alt="phytometeR logo" width="120"><br>
   <h1>phytometeR</h1>
-  <img src="man/figures/logo.png" alt="phytometeR logo" width="140" />
 </div>
+
 
 ## Overview
 phytometer provides tools for analyzing multi-omics data integrated with environmental measurements in ecological and evolutionary studies. The package facilitates investigation of organism responses to environmental stressors across spatial and temporal gradients.
