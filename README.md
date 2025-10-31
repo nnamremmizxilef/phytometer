@@ -159,9 +159,9 @@ MIT © Felix Zimmermann
 
 ## Citation
 
-If you use phytometer in your research, please cite:
+If you use phytometeR in your research, please cite:
 ```
-Zimmermann, F. (2025). phytometer: Analysis Tools for Tree Holobiont 
+Zimmermann, F. (2025). phytometeR: Analysis Tools for Tree Holobiont 
 Acclimation and Adaptation Research. R package version 0.0.0.9000.
 https://github.com/nnamremmizxilef/phytometer
 ```
