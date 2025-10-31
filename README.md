@@ -1,6 +1,6 @@
-# phytometer 
+<img src="inst/hex/logo.png" align="left" height="220" />
 
-<img src="inst/hex/logo.png" align="right" height="220" />
+# phytometer 
 
 phytometer provides tools for analyzing multi-omics data integrated with environmental measurements in ecological and evolutionary studies. The package facilitates investigation of organism responses to environmental stressors across spatial and temporal gradients.
 
